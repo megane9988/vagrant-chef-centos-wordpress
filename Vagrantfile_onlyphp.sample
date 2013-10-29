@@ -34,8 +34,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :chef_solo do |chef|
 
     chef.cookbooks_path = [
-      "~/Documents/vagrant/moto/vagrant-chef-centos-wordpress/cookbooks", 
-      "~/Documents/vagrant/moto/vagrant-chef-centos-wordpress/site-cookbooks"
+    File.join(WP_CHEF_COOKBOOKS_PATH, "cookbooks"),
+    File.join(WP_CHEF_COOKBOOKS_PATH, "site-cookbooks")
 	]
 
     chef.json = {
