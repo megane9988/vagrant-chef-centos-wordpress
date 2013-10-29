@@ -1,0 +1,62 @@
+# encoding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+
+#
+# Configuration for the Apache and PHP
+#
+
+
+MGN_HOSTNAME        = "clean.megane" # e.g example.com
+MGN_IP              = "192.168.33.81" # host ip address
+
+# end configuration
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "cent64_minimal_i386"
+  config.vm.box_url = "http://developer.nrel.gov/downloads/vagrant-boxes/CentOS-6.4-i386-v20130427.box"
+
+  config.vm.hostname = MGN_HOSTNAME
+  config.vm.network :private_network, ip: MGN_IP
+
+  config.vm.synced_folder "www/", "/var/www", :create => "true"
+
+  # for CentOS ipv6 issue
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "off"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "off"]
+  end
+
+  config.vm.provision :chef_solo do |chef|
+
+    chef.cookbooks_path = [
+      "~/Documents/vagrant/moto/vagrant-chef-centos-wordpress/cookbooks", 
+      "~/Documents/vagrant/moto/vagrant-chef-centos-wordpress/site-cookbooks"
+	]
+
+    chef.json = {
+      :apache => {
+        :docroot_dir  => '/var/www',
+        :user         => 'vagrant',
+        :group        => 'vagrant',
+        :listen_ports => ["80", "443"]
+      },
+      :php => {
+        :packages => %w(php php-cli php-devel php-mbstring php-gd php-xml)
+      }
+    }
+
+    chef.add_recipe "yum::epel"
+    chef.add_recipe "iptables"
+    chef.add_recipe "apache2"
+    chef.add_recipe "apache2::mod_php5"
+    chef.add_recipe "apache2::mod_ssl"
+    chef.add_recipe "php::package"
+
+  end
+
+end
